@@ -30,16 +30,33 @@ RCT_EXPORT_MODULE()
 
 RCT_EXPORT_METHOD(show:(NSDictionary *)options
                   callback:(RCTResponseSenderBlock)callback) {
-
+    
     NSArray *allowedUTIs = [RCTConvert NSArray:options[@"filetype"]];
     UIDocumentMenuViewController *documentPicker = [[UIDocumentMenuViewController alloc] initWithDocumentTypes:(NSArray *)allowedUTIs inMode:UIDocumentPickerModeImport];
-
+    
     [[self composeCallbacks] addObject:callback];
-
-
+    
+    for(NSDictionary *item in options[@"customActions"]) {
+        
+        [documentPicker addOptionWithTitle:item[@"label"] image:[UIImage imageNamed:@"photo"] order:0 handler:^{
+            RCTResponseSenderBlock callback = [[self composeCallbacks] lastObject];
+            [[self composeCallbacks] removeLastObject];
+            
+            NSMutableDictionary* result = [NSMutableDictionary dictionary];
+            [result addEntriesFromDictionary:item];
+            
+            [result setValue:item[@"key"] forKey:@"key"];
+            [result setValue:@YES forKey:@"isCustomAction"];
+            
+            callback(@[[NSNull null], result]);
+        }];
+        
+    }
+    
+    
     documentPicker.delegate = self;
     documentPicker.modalPresentationStyle = UIModalPresentationFormSheet;
-
+    
     UIViewController *rootViewController = [[[[UIApplication sharedApplication]delegate] window] rootViewController];
     while (rootViewController.modalViewController) {
         rootViewController = rootViewController.modalViewController;
@@ -51,7 +68,7 @@ RCT_EXPORT_METHOD(show:(NSDictionary *)options
         [documentPicker.popoverPresentationController setSourceRect: CGRectMake([left floatValue], [top floatValue], 0, 0)];
         [documentPicker.popoverPresentationController setSourceView: rootViewController.view];
     }
-
+    
     [rootViewController presentViewController:documentPicker animated:YES completion:nil];
 }
 
@@ -59,7 +76,7 @@ RCT_EXPORT_METHOD(show:(NSDictionary *)options
 - (void)documentMenu:(UIDocumentMenuViewController *)documentMenu didPickDocumentPicker:(UIDocumentPickerViewController *)documentPicker {
     documentPicker.delegate = self;
     documentPicker.modalPresentationStyle = UIModalPresentationFormSheet;
-
+    
     UIViewController *rootViewController = [[[[UIApplication sharedApplication]delegate] window] rootViewController];
     
     while (rootViewController.modalViewController) {
@@ -69,7 +86,7 @@ RCT_EXPORT_METHOD(show:(NSDictionary *)options
         [documentPicker.popoverPresentationController setSourceRect: CGRectMake(rootViewController.view.frame.size.width/2, rootViewController.view.frame.size.height - rootViewController.view.frame.size.height / 6, 0, 0)];
         [documentPicker.popoverPresentationController setSourceView: rootViewController.view];
     }
-
+    
     [rootViewController presentViewController:documentPicker animated:YES completion:nil];
 }
 
@@ -77,18 +94,18 @@ RCT_EXPORT_METHOD(show:(NSDictionary *)options
     if (controller.documentPickerMode == UIDocumentPickerModeImport) {
         RCTResponseSenderBlock callback = [[self composeCallbacks] lastObject];
         [[self composeCallbacks] removeLastObject];
-
+        
         [url startAccessingSecurityScopedResource];
-
+        
         NSFileCoordinator *coordinator = [[NSFileCoordinator alloc] init];
         __block NSError *error;
-
+        
         [coordinator coordinateReadingItemAtURL:url options:NSFileCoordinatorReadingResolvesSymbolicLink error:&error byAccessor:^(NSURL *newURL) {
             NSMutableDictionary* result = [NSMutableDictionary dictionary];
-
+            
             [result setValue:newURL.absoluteString forKey:@"uri"];
             [result setValue:[newURL lastPathComponent] forKey:@"fileName"];
-
+            
             NSError *attributesError = nil;
             NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:newURL.path error:&attributesError];
             if(!attributesError) {
@@ -96,10 +113,10 @@ RCT_EXPORT_METHOD(show:(NSDictionary *)options
             } else {
                 NSLog(@"%@", attributesError);
             }
-
+            
             callback(@[[NSNull null], result]);
         }];
-
+        
         [url stopAccessingSecurityScopedResource];
     }
 }
