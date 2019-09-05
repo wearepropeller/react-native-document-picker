@@ -1,6 +1,6 @@
-import { NativeModules, Platform } from "react-native";
+import { NativeModules, Platform } from 'react-native';
 
-const resolveAssetSource = require("react-native/Libraries/Image/resolveAssetSource");
+const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
 
 const callbacks = {};
 
@@ -22,7 +22,7 @@ const DocumentPicker = {
     }
 
     NativeModules.RNDocumentPicker.show(options, (err, res) => {
-      if (res.isCustomAction) {
+      if (res && res.isCustomAction) {
         callbacks[res.key](res, newRes => callback(null, newRes));
       } else {
         callback(err, res);
@@ -38,27 +38,27 @@ const DocumentPicker = {
  */
 class DocumentPickerUtil {
   static allFiles() {
-    return Platform.OS === "android" ? "*/*" : "public.content";
+    return Platform.OS === 'android' ? '*/*' : 'public.content';
   }
 
   static images() {
-    return Platform.OS === "android" ? "image/*" : "public.image";
+    return Platform.OS === 'android' ? 'image/*' : 'public.image';
   }
 
   static plainText() {
-    return Platform.OS === "android" ? "text/plain" : "public.plain-text";
+    return Platform.OS === 'android' ? 'text/plain' : 'public.plain-text';
   }
 
   static audio() {
-    return Platform.OS === "android" ? "audio/*" : "public.audio";
+    return Platform.OS === 'android' ? 'audio/*' : 'public.audio';
   }
 
   static video() {
-    return Platform.OS === "android" ? "video/*" : "public.video";
+    return Platform.OS === 'android' ? 'video/*' : 'public.video';
   }
 
   static pdf() {
-    return Platform.OS === "android" ? "application/pdf" : "com.adobe.pdf";
+    return Platform.OS === 'android' ? 'application/pdf' : 'com.adobe.pdf';
   }
 }
 
